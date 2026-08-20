@@ -168,6 +168,19 @@ ui:
   # Extra environment variables for the UI container (e.g. THEME, TAGLIST_ORDER).
   extraEnv: []
 
+  # The image's static assets and nginx runtime dirs (/var/cache/nginx,
+  # /etc/nginx/conf.d, /usr/share/nginx/html) are owned by the "nginx"
+  # user (uid/gid 101) baked into the image, not root. Run as that user
+  # so it doesn't need the DAC_OVERRIDE capability (which "drop: [ALL]"
+  # below removes) to write them at startup. Non-root can't bind port 80,
+  # so the container listens on 8080 instead (see containerPort).
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+
+  containerPort: 8080
+
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:

@@ -19,6 +19,8 @@ spec:
         {{- include "private-registry.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: ui
     spec:
+      securityContext:
+        {{- toYaml .Values.ui.podSecurityContext | nindent 8 }}
       containers:
         - name: registry-ui
           securityContext:
@@ -27,9 +29,11 @@ spec:
           imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: {{ .Values.ui.containerPort }}
               protocol: TCP
           env:
+            - name: NGINX_LISTEN_PORT
+              value: {{ .Values.ui.containerPort | quote }}
             - name: SINGLE_REGISTRY
               value: {{ .Values.ui.env.singleRegistry | quote }}
             - name: REGISTRY_TITLE
