@@ -1,5 +1,12 @@
 # Default values for private-registry.
 
+# Namespace all chart resources are deployed into, regardless of the
+# namespace passed to `helm install`.
+namespace: registry
+# Create the namespace above as part of this chart. Disable if it's
+# managed elsewhere (e.g. by a platform team or a separate chart).
+createNamespace: true
+
 replicaCount: 1
 
 image:

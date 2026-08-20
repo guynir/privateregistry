@@ -8,7 +8,7 @@ It is reachable through the configured Ingress at:
 {{- else }}
 To access it from your machine, forward the service port:
 
-  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "private-registry.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+  kubectl --namespace {{ .Values.namespace }} port-forward svc/{{ include "private-registry.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
 
 Then point Docker at it:
 
@@ -38,7 +38,7 @@ It is reachable through the configured Ingress at:
 {{- else }}
 To access it from your machine, forward its service port:
 
-  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "private-registry.fullname" . }}-ui {{ .Values.ui.service.port }}:{{ .Values.ui.service.port }}
+  kubectl --namespace {{ .Values.namespace }} port-forward svc/{{ include "private-registry.fullname" . }}-ui {{ .Values.ui.service.port }}:{{ .Values.ui.service.port }}
 
 Then browse to http://localhost:{{ .Values.ui.service.port }}
 {{- end }}

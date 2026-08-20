@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "private-registry.fullname" . }}-ui
+  namespace: {{ .Values.namespace }}
   labels:
     {{- include "private-registry.labels" . | nindent 4 }}
     app.kubernetes.io/component: ui
