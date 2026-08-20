@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "private-registry.fullname" . }}
+  labels:
+    {{- include "private-registry.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.persistence.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- else }}
+  # Filesystem storage with a single RWO volume only supports one replica.
+  replicas: 1
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "private-registry.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "private-registry.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "private-registry.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: registry
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["/etc/docker/registry/config.yml"]
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          {{- with .Values.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/docker/registry
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/registry
+            {{- if .Values.auth.enabled }}
+            - name: auth
+              mountPath: /auth
+              readOnly: true
+            {{- end }}
+            {{- if .Values.http.tls.enabled }}
+            - name: certs
+              mountPath: /certs
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "private-registry.fullname" . }}
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "private-registry.pvcName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.auth.enabled }}
+        - name: auth
+          secret:
+            secretName: {{ include "private-registry.authSecretName" . }}
+        {{- end }}
+        {{- if .Values.http.tls.enabled }}
+        - name: certs
+          secret:
+            secretName: {{ .Values.http.tls.existingSecret }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

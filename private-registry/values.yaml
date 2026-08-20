@@ -1,0 +1,118 @@
+# Default values for private-registry.
+
+replicaCount: 1
+
+image:
+  repository: registry
+  # Pinned to the latest stable release of distribution/distribution.
+  # Set to "latest" to always float to the newest tag on each pull.
+  tag: "3.1.1"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 5000
+  annotations: {}
+
+# HTTP settings for the registry itself (registry config.yml `http` section).
+http:
+  # Set to true to terminate TLS inside the registry container.
+  # Usually left false and TLS is terminated at an Ingress/LoadBalancer instead.
+  tls:
+    enabled: false
+    # Name of an existing TLS secret (tls.crt / tls.key) to mount when tls.enabled is true.
+    existingSecret: ""
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  hosts:
+    - host: registry.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - secretName: registry-tls
+    #   hosts:
+    #     - registry.local
+
+persistence:
+  enabled: true
+  # If set, an existing PVC is used instead of creating a new one.
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 20Gi
+  annotations: {}
+
+# Basic (htpasswd) authentication for the registry.
+auth:
+  enabled: false
+  # Name of an existing secret containing an `htpasswd` key.
+  # If empty, a secret is rendered from auth.htpasswd below.
+  existingSecret: ""
+  # Pre-generated htpasswd file content, e.g. produced with:
+  #   htpasswd -Bbn <user> <password>
+  htpasswd: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+# Extra environment variables for the registry container.
+extraEnv: []
+  # - name: REGISTRY_STORAGE_DELETE_ENABLED
+  #   value: "true"
+
+# Additional registry config.yml overrides, deep-merged under `storage`, `redis`, etc.
+# Left empty by default; the chart renders a filesystem-backed config.
+extraConfig: {}

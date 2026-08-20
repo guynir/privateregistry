@@ -1,0 +1,28 @@
+Private Docker registry "{{ include "private-registry.fullname" . }}" has been deployed.
+
+{{- if .Values.ingress.enabled }}
+It is reachable through the configured Ingress at:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+To access it from your machine, forward the service port:
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "private-registry.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+
+Then point Docker at it:
+
+  docker tag <image> localhost:{{ .Values.service.port }}/<image>
+  docker push localhost:{{ .Values.service.port }}/<image>
+{{- end }}
+
+{{- if .Values.auth.enabled }}
+
+Basic auth is enabled. Log in with:
+
+  docker login {{ if .Values.ingress.enabled }}{{ (first .Values.ingress.hosts).host }}{{ else }}localhost:{{ .Values.service.port }}{{ end }}
+{{- else }}
+
+Note: auth.enabled is false, so this registry accepts pushes/pulls without authentication.
+Do not expose it outside the cluster without enabling auth.enabled and/or restricting network access.
+{{- end }}

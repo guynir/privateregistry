@@ -1,0 +1,17 @@
+apiVersion: v2
+name: private-registry
+description: A Helm chart for deploying a private Docker (OCI) registry on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "3.1.1"
+keywords:
+  - docker
+  - registry
+  - oci
+  - container-registry
+home: https://github.com/distribution/distribution
+sources:
+  - https://github.com/distribution/distribution
+maintainers:
+  - name: guynir75
+    email: guynir75@gmail.com
