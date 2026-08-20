@@ -116,3 +116,65 @@ extraEnv: []
 # Additional registry config.yml overrides, deep-merged under `storage`, `redis`, etc.
 # Left empty by default; the chart renders a filesystem-backed config.
 extraConfig: {}
+
+# Joxit Docker Registry UI (https://github.com/Joxit/docker-registry-ui) —
+# a web UI deployed alongside the registry, talking to it over the cluster network.
+ui:
+  enabled: true
+
+  image:
+    repository: joxit/docker-registry-ui
+    tag: "2.6.0"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  service:
+    type: ClusterIP
+    port: 80
+    annotations: {}
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: registry-ui.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+      # - secretName: registry-ui-tls
+      #   hosts:
+      #     - registry-ui.local
+
+  # UI behavior, mapped to the image's environment variables.
+  env:
+    # Defaults to "<release name> Registry" when empty.
+    title: ""
+    singleRegistry: true
+    deleteImages: false
+    showCatalogNbTags: true
+    taglistPageSize: 100
+    catalogElementsLimit: 1000
+
+  # Extra environment variables for the UI container (e.g. THEME, TAGLIST_ORDER).
+  extraEnv: []
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

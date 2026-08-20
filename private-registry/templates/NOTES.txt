@@ -26,3 +26,20 @@ Basic auth is enabled. Log in with:
 Note: auth.enabled is false, so this registry accepts pushes/pulls without authentication.
 Do not expose it outside the cluster without enabling auth.enabled and/or restricting network access.
 {{- end }}
+
+{{- if .Values.ui.enabled }}
+
+The Joxit Docker Registry UI is deployed alongside the registry.
+{{- if .Values.ui.ingress.enabled }}
+It is reachable through the configured Ingress at:
+{{- range .Values.ui.ingress.hosts }}
+  http{{ if $.Values.ui.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+To access it from your machine, forward its service port:
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "private-registry.fullname" . }}-ui {{ .Values.ui.service.port }}:{{ .Values.ui.service.port }}
+
+Then browse to http://localhost:{{ .Values.ui.service.port }}
+{{- end }}
+{{- end }}
