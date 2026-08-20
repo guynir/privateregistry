@@ -41,7 +41,7 @@ securityContext:
       - ALL
 
 service:
-  type: ClusterIP
+  type: LoadBalancer
   port: 5000
   annotations: {}
 
@@ -137,8 +137,8 @@ ui:
   replicaCount: 1
 
   service:
-    type: ClusterIP
-    port: 80
+    type: LoadBalancer
+    port: 5080
     annotations: {}
 
   ingress:

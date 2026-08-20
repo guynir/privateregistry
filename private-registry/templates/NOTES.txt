@@ -5,6 +5,15 @@ It is reachable through the configured Ingress at:
 {{- range .Values.ingress.hosts }}
   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
 {{- end }}
+{{- else if eq .Values.service.type "LoadBalancer" }}
+It is exposed on an external IP at port {{ .Values.service.port }}. Find it with:
+
+  kubectl --namespace {{ .Values.namespace }} get svc {{ include "private-registry.fullname" . }}
+
+Then point Docker at it:
+
+  docker tag <image> <EXTERNAL-IP>:{{ .Values.service.port }}/<image>
+  docker push <EXTERNAL-IP>:{{ .Values.service.port }}/<image>
 {{- else }}
 To access it from your machine, forward the service port:
 
@@ -20,7 +29,7 @@ Then point Docker at it:
 
 Basic auth is enabled. Log in with:
 
-  docker login {{ if .Values.ingress.enabled }}{{ (first .Values.ingress.hosts).host }}{{ else }}localhost:{{ .Values.service.port }}{{ end }}
+  docker login <the host:port above>
 {{- else }}
 
 Note: auth.enabled is false, so this registry accepts pushes/pulls without authentication.
@@ -35,6 +44,12 @@ It is reachable through the configured Ingress at:
 {{- range .Values.ui.ingress.hosts }}
   http{{ if $.Values.ui.ingress.tls }}s{{ end }}://{{ .host }}
 {{- end }}
+{{- else if eq .Values.ui.service.type "LoadBalancer" }}
+It is exposed on an external IP at port {{ .Values.ui.service.port }}. Find it with:
+
+  kubectl --namespace {{ .Values.namespace }} get svc {{ include "private-registry.fullname" . }}-ui
+
+Then browse to http://<EXTERNAL-IP>:{{ .Values.ui.service.port }}
 {{- else }}
 To access it from your machine, forward its service port:
 
